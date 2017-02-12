@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+        <title>How can you limit the scope on a directive and why would you do this?</title>
+    </head>
+    <body>
+        <h2>Question : How can you limit the scope on a directive and why would you do this?</h2>
+        <h2>Answer : </h2><p> By using Isolated scope of a directive. Isolated scope is a new scope created for the directive, but it will not be inherited from the parent scope which means that this scope will have no access to its outer environment. This doesn't mean that it can't access the parent scope or is totally cut off. Its just like creating a wall to stop the data penetration outside the directives. Isolate scopes do provides local scope properties to interact with parent scopes and these are : </p>
+        <ul>
+            <li><b>@</b> one way binding which means any change made to parent scope will be available to directive scopes</li>
+            <li><b>=</b> two way binding i.e any change in the parent scope will be available to directive scopes and vice a versa</li>
+            <li><b>&amp;</b> for binding methods i.e to call a functions defined in the parent controller</li>
+        </ul>
+
+        <h3><a href="#demo">Example</a></h3>Consider a scenario where I wont to apply some different template within some part of my parent html. We can do so by defining a custom directive in order to replace our default one.
+        <pre>
+        </pre>
+        <div ng-controller="IsolateScopeExController">
+            <h1><a id="demo">This is a demo example</a></h1>
+            <parent-directive custom-trigger="increaseCnt()" custom-data="customers" custom-alert="disableBtn"></parent-directive>
+        </div>
+        <script>
+            angular.module('IsolateScopeApp', [])
+                .directive('parentDirective', function($compile, $filter) {
+                return {
+                    restrict : 'E',
+                    scope : {
+                        customData : '=',
+                        customAlert : '=',
+                        customTrigger : '&'
+                    },
+                    templateUrl : 'template.html',
+                    transclude: true,
+                    link : function($scope, element, attr) {
+                        if(!!$scope.customTemplate) {
+                            $scope.editableCell = element.children();
+                            $scope.editableCell.attr($scope.customTemplate, '');
+                            angular.extend($scope, $scope.customData);
+                            angular.extend($scope, $scope.customerName);
+                            $compile($scope.editableCell)($scope);
+                        }
+                        $scope.increaseCnt = function(param) {
+                            if(param === undefined || param === '') {
+                                alert("Please type first your namein the search box");
+                            } else {
+                                angular.forEach($scope.customData, function(val, key) {
+                                    if(val['name'] === param) {
+                                        $scope.customData[key].cnt ++;
+                                        $scope.generatePin = $scope.customData[key].cnt
+                                    }
+                                })
+                                if($scope.generatePin) {
+                                    angular.element(element).find('h2')[0].append(' Your Customer Id is '+$scope.generatePin);
+                                    $scope.disableBtn = true;
+                                } else {
+                                    angular.element(element).find('h2')[0].append(" Your Name does'nt belongs in our database. Contact Admin for help")
+                                }
+                            }
+                        };
+                    }
+                }
+            }).controller('IsolateScopeExController', function($scope, $filter){
+                $scope.disableBtn = false;
+                $scope.visitorName='';
+                $scope.customers = [
+                    {
+                        'name' : 'Tapleen',
+                        'cnt' : 33232
+                    },{
+                        'name' : 'John',
+                        'cnt' : 12323
+                    },
+                ]
+            });
+            angular.element(document).ready(function() {
+                angular.bootstrap(document, ['IsolateScopeApp'])
+            })
+        </script>
+    </body>
+</html>
